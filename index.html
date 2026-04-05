@@ -40,13 +40,14 @@
         textarea {
             width: 100%; border: none; outline: none; font-size: 17px;
             resize: none; background: transparent; margin-bottom: 12px;
+            color: var(--ios-text);
         }
         .btn-send {
             background: var(--ios-blue); color: white; border: none;
             padding: 8px 18px; border-radius: 20px; font-weight: 600;
             cursor: pointer; float: right; transition: all 0.2s;
         }
-        .btn-send:disabled { opacity: 0.3; }
+        .btn-send:disabled { opacity: 0.3; cursor: not-allowed; }
 
         /* 帖子列表 */
         .post-card {
@@ -54,12 +55,16 @@
             margin-bottom: 16px; box-shadow: 0 2px 10px rgba(0,0,0,0.02);
         }
         .user-info { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
-        .avatar { width: 36px; height: 36px; background: #E5E5EA; border-radius: 50%; }
+        .avatar { 
+            width: 36px; height: 36px; background: #E5E5EA; border-radius: 50%; 
+            display: flex; align-items: center; justify-content: center; 
+            font-weight: 600; color: #8E8E93; font-size: 14px;
+        }
         .username { font-weight: 600; font-size: 15px; }
         .time { font-size: 12px; color: var(--ios-secondary); }
-        .content { font-size: 17px; margin-bottom: 10px; word-wrap: break-word; }
+        .content { font-size: 17px; margin-bottom: 10px; word-wrap: break-word; white-space: pre-wrap; }
 
-        .auth-btn { color: var(--ios-blue); font-weight: 500; cursor: pointer; }
+        .auth-btn { color: var(--ios-blue); font-weight: 500; cursor: pointer; text-decoration: none; }
     </style>
 </head>
 <body>
@@ -81,83 +86,130 @@
 </div>
 
 <script>
-    // 配置你的信息
-    const SUPABASE_URL = 'https://ipcetzfcptxuzyhgszse.supabase.co';
-    const SUPABASE_KEY = 'sb_publishable_vSgW632vNRNafBN3gy8jaA_rT4XQu8E';
-    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    // --- 自动化配置 ---
+    const CONF = {
+        URL: 'https://ipcetzfcptxuzyhgszse.supabase.co',
+        KEY: 'sb_publishable_vSgW632vNRNafBN3gy8jaA_rT4XQu8E'
+    };
+
+    // 使用 client 命名避开全局变量冲突
+    const client = window.supabase.createClient(CONF.URL, CONF.KEY);
 
     const postFeed = document.getElementById('postFeed');
     const publishArea = document.getElementById('publishArea');
     const userLabel = document.getElementById('userLabel');
     const sendBtn = document.getElementById('sendBtn');
     
-    let myId = null;
+    let currentUserId = null;
 
-    // 1. 初始化鉴权
-    async function initAuth() {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (user) {
-            myId = user.id;
-            publishArea.style.display = 'block';
-            userLabel.innerHTML = `你好, ${user.email.split('@')[0]} · <span class="auth-btn" onclick="signOut()">退出</span>`;
-        } else {
-            userLabel.innerHTML = `<span class="auth-btn" onclick="signIn()">登录/注册</span>`;
+    // 1. 初始化鉴权状态
+    async function init() {
+        try {
+            const { data: { user } } = await client.auth.getUser();
+            if (user) {
+                currentUserId = user.id;
+                publishArea.style.display = 'block';
+                const shortName = user.email.split('@')[0];
+                userLabel.innerHTML = `Hi, ${shortName} · <a class="auth-btn" onclick="logout()">退出</a>`;
+            } else {
+                userLabel.innerHTML = `<a class="auth-btn" onclick="login()">登录/注册</a>`;
+            }
+        } catch (err) {
+            console.error("Auth init error:", err);
         }
-        loadPosts();
+        fetchPosts();
     }
 
-    // 2. 加载帖子（关键：这里用了联合查询 profiles 表）
-    async function loadPosts() {
-        const { data, error } = await supabase
+    // 2. 获取帖子数据
+    async function fetchPosts() {
+        // 尝试联合查询 profiles 表，如果报错则降级处理
+        let { data, error } = await client
             .from('posts')
             .select('*, profiles(username, avatar_url)')
             .order('created_at', { ascending: false });
 
+        // 容错处理：如果 profiles 表还没准备好，进行降级普通查询
+        if (error && error.message.includes('profiles')) {
+            console.warn("Profiles 关联失败，执行降级查询");
+            const fallback = await client.from('posts').select('*').order('created_at', { ascending: false });
+            data = fallback.data;
+            error = fallback.error;
+        }
+
         if (error) {
-            postFeed.innerHTML = "加载失败，检查下 RLS？";
+            postFeed.innerHTML = `<div style="text-align:center;color:#FF3B30;padding:20px;">思绪断开了: ${error.message}</div>`;
             return;
         }
 
-        postFeed.innerHTML = data.map(post => `
-            <div class="post-card">
-                <div class="user-info">
-                    <div class="avatar"></div>
-                    <div>
-                        <div class="username">${post.profiles?.username || '匿名行者'}</div>
-                        <div class="time">${new Date(post.created_at).toLocaleString()}</div>
+        if (!data || data.length === 0) {
+            postFeed.innerHTML = `<div style="text-align:center;padding:80px;color:#8E8E93;">这里空空如也，留下你的第一条思考吧。</div>`;
+            return;
+        }
+
+        postFeed.innerHTML = data.map(post => {
+            const name = post.profiles?.username || '匿名';
+            return `
+                <div class="post-card">
+                    <div class="user-info">
+                        <div class="avatar">${name.charAt(0).toUpperCase()}</div>
+                        <div>
+                            <div class="username">${name}</div>
+                            <div class="time">${new Date(post.created_at).toLocaleString('zh-CN', {hour12:false})}</div>
+                        </div>
                     </div>
+                    <div class="content">${safeHtml(post.content)}</div>
                 </div>
-                <div class="content">${escapeHtml(post.content)}</div>
-            </div>
-        `).join('');
+            `;
+        }).join('');
     }
 
-    // 3. 发布逻辑
+    // 3. 发帖动作
     sendBtn.onclick = async () => {
         const content = document.getElementById('postInput').value.trim();
-        if (!content) return;
+        if (!content || !currentUserId) return;
 
         sendBtn.disabled = true;
-        const { error } = await supabase.from('posts').insert([{ content, user_id: myId }]);
-        
-        if (error) alert("发布失败: " + error.message);
-        else {
+        sendBtn.innerText = "正在发布...";
+
+        const { error } = await client.from('posts').insert([
+            { content: content, user_id: currentUserId }
+        ]);
+
+        if (error) {
+            alert("发布失败：" + error.message);
+        } else {
             document.getElementById('postInput').value = '';
-            loadPosts();
+            await fetchPosts();
         }
         sendBtn.disabled = false;
+        sendBtn.innerText = "发布";
     };
 
-    // 辅助功能
-    async function signIn() {
-        const email = prompt("请输入邮箱：");
-        if (email) await supabase.auth.signInWithOtp({ email });
-        alert("请检查邮箱登录链接！");
+    // 交互功能
+    async function login() {
+        const email = prompt("请输入邮箱获取验证链接：");
+        if (!email) return;
+        const { error } = await client.auth.signInWithOtp({ 
+            email,
+            options: { emailRedirectTo: window.location.href }
+        });
+        if (error) alert("发送失败: " + error.message);
+        else alert("邮件已发送！请通过邮件链接登录。");
     }
-    async function signOut() { await supabase.auth.signOut(); location.reload(); }
-    function escapeHtml(str) { const p = document.createElement('p'); p.textContent = str; return p.innerHTML; }
 
-    initAuth();
+    async function logout() {
+        await client.auth.signOut();
+        window.location.reload();
+    }
+
+    function safeHtml(str) {
+        const div = document.createElement('div');
+        div.textContent = str;
+        return div.innerHTML;
+    }
+
+    // 启动项目
+    init();
 </script>
 </body>
 </html>
