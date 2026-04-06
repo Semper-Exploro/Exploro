@@ -159,8 +159,37 @@
         <div style="height: 35px;"><button id="sendBtn" class="btn-send">发布</button></div>
     </div>
 
-    <div id="postFeed">
-        <div style="text-align: center; padding: 50px; color: #888;">正在连接思绪...</div>
+    <div id="feed-view">
+        <div id="postFeed">
+            <div style="text-align: center; padding: 50px; color: #888;">正在连接思绪...</div>
+        </div>
+    </div>
+
+    <div id="detail-view" style="display: none;">
+        <div class="nav-bar detail-nav" style="position: sticky; top: 0; z-index: 100;">
+            <button class="back-btn" onclick="goBackToFeed()">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle; margin-right: 5px;">
+                    <path d="M19 12H5M12 19l-7-7 7-7"></path>
+                </svg>
+                返回
+            </button>
+            <strong style="font-size: 20px; letter-spacing: -0.5px;">讨论详情</strong>
+            <div></div>
+        </div>
+        <div class="container detail-container" style="padding-top: 10px;">
+            <div id="post-detail-content">
+                <div style="text-align: center; padding: 50px; color: #888;">正在加载...</div>
+            </div>
+            <div id="comments-section">
+                <div style="text-align: center; padding: 20px; color: #888;">正在加载评论...</div>
+            </div>
+            <div class="comment-bar" style="position: fixed; bottom: 0; left: 0; right: 0; width: 100%; padding: 15px 16px; background: var(--ios-bg); border-top: 1px solid #e0e0e0;">
+                <div style="display: flex; gap: 10px;">
+                    <textarea id="commentInput" placeholder="发表评论..." style="flex: 1; padding: 12px; border-radius: 12px; border: 1px solid #ddd; font-size: 16px; resize: none; height: 40px; max-height: 100px;"></textarea>
+                    <button id="commentSendBtn" class="btn-send" style="margin: 0; height: 40px; min-width: 60px;">发送</button>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 
@@ -291,9 +320,14 @@
                         </div>
                     </div>
                     <div class="content">${safeHtml(post.content)}</div>
-                    <button class="like-btn ${likedClass}" onclick="toggleLike('${post.id}', this)">
-                        <span class="heart-icon">❤</span> <span class="like-count">${post.likeCount}</span>
-                    </button>
+                    <div style="display: flex; gap: 10px; margin-top: 10px;">
+                        <button class="like-btn ${likedClass}" onclick="toggleLike('${post.id}', this)">
+                            <span class="heart-icon">❤</span> <span class="like-count">${post.likeCount}</span>
+                        </button>
+                        <button class="comment-btn" onclick="showPostDetail('${post.id}')" style="display: inline-flex; align-items: center; gap: 4px; background: none; border: none; color: var(--ios-secondary); font-size: 14px; cursor: pointer; padding: 5px 10px; border-radius: 12px; transition: all 0.3s ease; margin-top: 0;">
+                            <span>💬</span> <span class="comment-count">评论</span>
+                        </button>
+                    </div>
                     ${isOwner ? `<button class="delete-btn" onclick="deletePost(event, '${post.id}')">
                         <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2  0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
@@ -303,6 +337,29 @@
             `;
         }).join('');
     }
+
+    // 添加评论按钮样式
+    const style = document.createElement('style');
+    style.textContent = `
+        .comment-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            background: none;
+            border: none;
+            color: var(--ios-secondary);
+            font-size: 14px;
+            cursor: pointer;
+            padding: 5px 10px;
+            border-radius: 12px;
+            transition: all 0.3s ease;
+        }
+
+        .comment-btn:hover {
+            background-color: #f0f0f0;
+        }
+    `;
+    document.head.appendChild(style);
 
     // 删除帖子功能
     async function deletePost(event, postId) {
@@ -457,6 +514,159 @@
             console.error('点赞操作出错:', err);
             alert('操作失败，请重试');
         }
+    }
+
+    // 显示帖子详情页
+    async function showPostDetail(postId) {
+        // 激活详情页，隐藏feed-view
+        document.getElementById('feed-view').style.display = 'none';
+        document.getElementById('detail-view').style.display = 'block';
+        
+        // 获取帖子详情
+        const { data: post, error } = await client
+            .from('posts')
+            .select('*, profiles(username, avatar_url)')
+            .eq('id', postId)
+            .single();
+            
+        if (error) {
+            document.getElementById('post-detail-content').innerHTML = `<div style="text-align: center; padding: 50px; color: #888;">帖子加载失败</div>`;
+            return;
+        }
+        
+        // 渲染帖子详情
+        const profile = post.profiles;
+        const name = profile?.username || '匿名';
+        const avatarUrl = profile?.avatar_url || '';
+        const avatarHtml = avatarUrl ? 
+            `<img src="${avatarUrl}" class="avatar" style="object-fit: cover;" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" />` +
+            `<div class="avatar" style="display: none; position: absolute;">${name.charAt(0).toUpperCase()}</div>`
+            : `<div class="avatar">${name.charAt(0).toUpperCase()}</div>`;
+        
+        const postDetailHtml = `
+            <div class="post-card" style="padding: 25px; margin-bottom: 15px;">
+                <div class="user-info" style="margin-bottom: 15px;">
+                    <div style="position: relative; display: inline-block;">
+                        ${avatarHtml}
+                    </div>
+                    <div>
+                        <div class="username" style="font-size: 16px;">${name}</div>
+                        <div class="time" style="font-size: 13px; color: #8E8E93;">${new Date(post.created_at).toLocaleString('zh-CN', {year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hour12: false})}</div>
+                    </div>
+                </div>
+                <div class="content" style="font-size: 18px; line-height: 1.6;">${safeHtml(post.content)}</div>
+            </div>
+        `;
+        document.getElementById('post-detail-content').innerHTML = postDetailHtml;
+        
+        // 加载评论
+        await loadComments(postId);
+    }
+
+    // 加载评论
+    async function loadComments(postId) {
+        const { data: comments, error } = await client
+            .from('posts')
+            .select('*, profiles(username, avatar_url)')
+            .eq('parent_id', postId)
+            .order('created_at', { ascending: true });
+            
+        if (error) {
+            document.getElementById('comments-section').innerHTML = `<div style="text-align: center; padding: 20px; color: #888;">评论加载失败</div>`;
+            return;
+        }
+        
+        if (comments.length === 0) {
+            document.getElementById('comments-section').innerHTML = `<div style="text-align: center; padding: 20px; color: #888;">还没有评论，快来发表第一个评论吧！</div>`;
+            return;
+        }
+        
+        // 渲染评论列表
+        const commentsHtml = comments.map(comment => {
+            const profile = comment.profiles;
+            const name = profile?.username || '匿名';
+            const avatarUrl = profile?.avatar_url || '';
+            const avatarHtml = avatarUrl ? 
+                `<img src="${avatarUrl}" class="avatar" style="object-fit: cover; width: 30px; height: 30px;" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" />` +
+                `<div class="avatar" style="display: none; position: absolute; width: 30px; height: 30px;">${name.charAt(0).toUpperCase()}</div>`
+                : `<div class="avatar" style="width: 30px; height: 30px;">${name.charAt(0).toUpperCase()}</div>`;
+                
+            return `
+                <div class="post-card" style="padding: 15px; margin-bottom: 10px; border-radius: 16px;">
+                    <div class="user-info" style="margin-bottom: 10px;">
+                        <div style="position: relative; display: inline-block;">
+                            ${avatarHtml}
+                        </div>
+                        <div>
+                            <div class="username" style="font-size: 14px;">${name}</div>
+                            <div class="time" style="font-size: 12px; color: #8E8E93;">${new Date(comment.created_at).toLocaleString('zh-CN', {hour: '2-digit', minute: '2-digit', hour12: false})}</div>
+                        </div>
+                    </div>
+                    <div class="content" style="font-size: 16px; line-height: 1.5;">${safeHtml(comment.content)}</div>
+                </div>
+            `;
+        }).join('');
+        
+        document.getElementById('comments-section').innerHTML = commentsHtml;
+    }
+
+        // 添加评论
+        async function addComment(postId) {
+            const content = document.getElementById('commentInput').value.trim();
+            if (!content) {
+                alert('评论内容不能为空');
+                return;
+            }
+            
+            if (!currentUserId) {
+                alert('请先登录');
+                return;
+            }
+            
+            // 添加评论
+            const { error } = await client
+                .from('posts')
+                .insert({
+                    content: content,
+                    user_id: currentUserId,
+                    parent_id: postId // 添加parent_id表示这是评论
+                });
+                
+            if (error) {
+                alert('发布评论失败: ' + error.message);
+                return;
+            }
+            
+            // 清空输入框并重新加载评论
+            document.getElementById('commentInput').value = '';
+            await loadComments(postId);
+        }
+
+        // 为评论发送按钮添加点击事件
+        document.getElementById('commentSendBtn').addEventListener('click', function() {
+            const postId = document.querySelector('#post-detail-content .post-card').dataset.postId;
+            if (postId) {
+                addComment(postId);
+            }
+        });
+
+        // 为评论输入框添加回车发送功能
+        document.getElementById('commentInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault(); // 阻止换行
+                const postId = document.querySelector('#post-detail-content .post-card').dataset.postId;
+                if (postId) {
+                    addComment(postId);
+                }
+            }
+        });
+
+    // 返回到feed视图
+    function goBackToFeed() {
+        document.getElementById('feed-view').style.display = 'block';
+        document.getElementById('detail-view').style.display = 'none';
+        // 清空评论区域
+        document.getElementById('comments-section').innerHTML = '<div style="text-align: center; padding: 20px; color: #888;">正在加载评论...</div>';
     }
 
     // 启动项目
