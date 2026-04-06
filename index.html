@@ -21,7 +21,283 @@
             line-height: 1.4;
         }
 
-        /* iOS 风格模糊导航栏 */
+        /* 响应式容器 */
+        .container, .detail-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px 16px;
+        }
+
+    /* 桌面端布局 */
+    @media (min-width: 768px) {
+        .container, .detail-container {
+            padding: 20px 40px;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        /* 侧边栏布局 */
+        .desktop-layout {
+            display: flex;
+            gap: 32px; /* 增加间隙 */
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .main-content {
+            flex: 3; /* 给主内容更多空间 */
+            min-width: 0; /* 防止flex项溢出 */
+            max-width: 1200px; /* 进一步增加主内容区域宽度 */
+        }
+
+        .sidebar {
+            flex: 1; /* 侧边栏使用flex:1，但限制最大宽度 */
+            flex: 0 0 320px;
+            position: sticky;
+            top: 20px;
+            align-self: flex-start;
+            height: fit-content;
+        }
+
+        /* 调整卡片样式以适应桌面布局 */
+        .post-card {
+            margin-bottom: 20px;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+            transition: box-shadow 0.3s ease;
+            padding: 28px; /* 增加内边距 */
+        }
+        
+        .post-card:hover {
+            box-shadow: 0 6px 20px rgba(0,0,0,0.12);
+        }
+        
+        /* 增加内容字体大小 */
+        .content {
+            font-size: 20px !important; /* 重要：确保字体更大 */
+            line-height: 1.7;
+        }
+        
+        /* 增加用户名和时间字体大小 */
+        .username { 
+            font-size: 17px !important;
+        }
+        
+        .time { 
+            font-size: 14px !important;
+        }
+
+        /* 桌面端导航栏 */
+        .nav-bar {
+            padding: 16px 40px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            border-radius: 0 0 20px 20px;
+        }
+
+        /* 桌面端发布卡片 */
+        .input-card {
+            margin-bottom: 24px;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+        }
+        
+        .input-card textarea {
+            font-size: 16px;
+        }
+
+        /* 桌面端详情页布局 */
+        .detail-content {
+            display: flex;
+            gap: 24px;
+            max-width: 1400px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        .detail-main {
+            flex: 1;
+            max-width: 800px;
+        }
+
+        .detail-sidebar {
+            flex: 0 0 320px;
+        }
+        
+        /* 优化详情页布局 */
+        #post-detail-content {
+            flex: 1;
+            width: 100%;
+        }
+        
+        #comments-section {
+            flex: 0 0 320px;
+            max-width: 320px;
+            align-self: flex-start;
+            position: sticky;
+            top: 20px;
+            height: fit-content;
+        }
+        
+        .detail-container {
+            padding-top: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 24px;
+        }
+        
+        /* 评论栏在桌面端保持在帖子下方 */
+        .comment-bar {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px 0 0 0;
+            position: static;
+            background: var(--ios-bg);
+            border-top: none;
+            border-radius: 20px;
+        }
+        
+        /* 详情页导航栏样式优化 */
+        .detail-nav {
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border-bottom: 0.5px solid rgba(0,0,0,0.1);
+            border-radius: 0 0 20px 20px;
+        }
+        
+        /* 详情页帖子卡片样式优化 */
+        .detail-container .post-card {
+            width: 100%;
+            max-width: 800px;
+        }
+        
+        /* 优化侧边栏卡片 */
+        .sidebar-card {
+            box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+            margin-bottom: 20px;
+        }
+        
+        /* 桌面端用户名显示优化 */
+        #userLabel {
+            font-size: 15px;
+        }
+        
+        /* 桌面端按钮样式 */
+        .btn-send {
+            padding: 10px 24px;
+            font-size: 16px;
+        }
+        
+        /* 优化头像显示 */
+        .avatar {
+            width: 42px;
+            height: 42px;
+            font-size: 16px;
+        }
+        
+        /* 优化帖子内容 */
+        .content {
+            font-size: 18px;
+        }
+        
+        /* 增强的桌面布局 - 更好的响应性 */
+        .post-card {
+            transition: all 0.3s ease;
+        }
+        
+        .post-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+        }
+        
+        /* 优化文本区域 */
+        textarea {
+            font-size: 16px;
+            line-height: 1.6;
+        }
+        
+        /* 优化按钮交互 */
+        .btn-send:hover {
+            transform: scale(1.02);
+            transition: all 0.2s ease;
+        }
+        
+        /* 优化导航栏 */
+        .nav-bar:hover {
+            background: rgba(255, 255, 255, 0.8);
+        }
+    }
+    
+    /* 大屏幕优化 */
+    @media (min-width: 1200px) {
+        .container, .detail-container {
+            padding: 24px 50px;
+            max-width: 1600px;
+        }
+        
+        .desktop-layout {
+            max-width: 1600px;
+        }
+        
+        .sidebar {
+            flex: 0 0 360px;
+        }
+        
+        .detail-sidebar {
+            flex: 0 0 360px;
+        }
+        
+        #comments-section {
+            flex: 0 0 360px;
+            max-width: 360px;
+        }
+        
+        /* 进一步优化大屏幕体验 - 更宽的主内容区域 */
+        .main-content {
+            max-width: 1000px;
+            flex: 1 1 1000px;
+        }
+        
+        .detail-main {
+            max-width: 1000px;
+        }
+    }
+    
+    /* 超大屏幕优化 */
+    @media (min-width: 1400px) {
+        .desktop-layout {
+            max-width: 1800px;
+        }
+        
+        .sidebar {
+            flex: 0 0 400px;
+        }
+        
+        .detail-sidebar {
+            flex: 0 0 400px;
+        }
+        
+        #comments-section {
+            flex: 0 0 400px;
+            max-width: 400px;
+        }
+        
+        .container, .detail-container {
+            max-width: 1800px;
+            padding: 28px 60px;
+        }
+        
+        /* 超大屏幕下更宽的主内容区域 */
+        .main-content {
+            max-width: 1200px;
+            flex: 1 1 1200px;
+        }
+        
+        .detail-main {
+            max-width: 1200px;
+        }
+    }
+
+        /* 移动端样式（默认） */
         .nav-bar {
             position: sticky; top: 0; z-index: 100;
             background: rgba(255, 255, 255, 0.7);
@@ -51,7 +327,7 @@
 
         /* 帖子列表 */
         .post-card {
-            background: var(--ios-card); border-radius: 20px; padding: 20px;
+            background: var(--ios-card); border-radius: 20px; padding: 24px; /* 增加内边距 */
             margin-bottom: 16px; box-shadow: 0 2px 10px rgba(0,0,0,0.02);
             position: relative;
         }
@@ -61,9 +337,9 @@
             display: flex; align-items: center; justify-content: center; 
             font-weight: 600; color: #8E8E93; font-size: 14px;
         }
-        .username { font-weight: 600; font-size: 15px; }
-        .time { font-size: 12px; color: var(--ios-secondary); }
-        .content { font-size: 17px; margin-bottom: 10px; word-wrap: break-word; white-space: pre-wrap; }
+        .username { font-weight: 600; font-size: 16px; } /* 增大用户名字体 */
+        .time { font-size: 13px; color: var(--ios-secondary); } /* 增大时间字体 */
+        .content { font-size: 18px; margin-bottom: 10px; word-wrap: break-word; white-space: pre-wrap; } /* 增大内容字体 */
 
         .delete-btn {
             position: absolute;
@@ -172,17 +448,22 @@
         }
 
         .detail-container {
-            height: calc(100vh - 120px);
+            height: auto;
+            min-height: calc(100vh - 120px);
             overflow-y: auto;
             padding: 0 16px;
+            display: block;
         }
 
         .detail-nav {
-            position: fixed !important;
+            position: sticky !important;
             top: 0;
             left: 0;
             right: 0;
             z-index: 100;
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
         }
 
         .back-btn {
@@ -201,6 +482,24 @@
             background-color: #e0e0e055;
         }
 
+        /* 侧边栏样式 */
+        .sidebar-card {
+            background: var(--ios-card);
+            border-radius: 18px;
+            padding: 20px;
+            margin-bottom: 16px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.02);
+        }
+
+        .trending-post {
+            padding: 10px 0;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .trending-post:last-child {
+            border-bottom: none;
+        }
+
     </style>
 </head>
 <body>
@@ -211,14 +510,45 @@
 </nav>
 
 <div class="container">
-    <div id="publishArea" class="input-card" style="display: none;">
-        <textarea id="postInput" placeholder="分享你的深度思考..." rows="3"></textarea>
-        <div style="height: 35px;"><button id="sendBtn" class="btn-send">发布</button></div>
-    </div>
+    <div class="desktop-layout">
+        <div class="main-content">
+            <div id="publishArea" class="input-card" style="display: none;">
+                <textarea id="postInput" placeholder="分享你的深度思考..." rows="3"></textarea>
+                <div style="height: 35px;"><button id="sendBtn" class="btn-send">发布</button></div>
+            </div>
 
-    <div id="feed-view">
-        <div id="postFeed">
-            <div style="text-align: center; padding: 50px; color: #888;">正在连接思绪...</div>
+            <div id="feed-view">
+                <div id="postFeed">
+                    <div style="text-align: center; padding: 50px; color: #888;">正在连接思绪...</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="sidebar" id="sidebar">
+            <div class="sidebar-card">
+                <h3 style="margin-bottom: 15px; font-size: 18px;">热门讨论</h3>
+                <div id="trending-posts">
+                    <div style="text-align: center; padding: 20px; color: #888;">正在加载...</div>
+                </div>
+            </div>
+
+            <div class="sidebar-card">
+                <h3 style="margin-bottom: 15px; font-size: 18px;">社区数据</h3>
+                <div id="community-stats">
+                    <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #f0f0f0;">
+                        <span>总帖子数</span>
+                        <span id="total-posts">0</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #f0f0f0;">
+                        <span>总用户数</span>
+                        <span id="total-users">0</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; padding: 8px 0;">
+                        <span>今日活跃</span>
+                        <span id="today-active">0</span>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -234,16 +564,20 @@
             <div></div>
         </div>
         <div class="container detail-container" style="padding-top: 10px;">
-            <div id="post-detail-content">
-                <div style="text-align: center; padding: 50px; color: #888;">正在加载...</div>
-            </div>
-            <div id="comments-section">
-                <div style="text-align: center; padding: 20px; color: #888;">正在加载评论...</div>
-            </div>
-            <div class="comment-bar" style="position: fixed; bottom: 0; left: 0; right: 0; width: 100%; padding: 15px 16px; background: var(--ios-bg); border-top: 1px solid #e0e0e0;">
-                <div style="display: flex; gap: 10px;">
-                    <textarea id="commentInput" placeholder="发表评论..." style="flex: 1; padding: 12px; border-radius: 12px; border: 1px solid #ddd; font-size: 16px; resize: none; height: 40px; max-height: 100px;"></textarea>
-                    <button id="commentSendBtn" class="btn-send" style="margin: 0; height: 40px; min-width: 60px;">发送</button>
+            <div class="detail-content">
+                <div class="detail-main">
+                    <div id="post-detail-content">
+                        <div style="text-align: center; padding: 50px; color: #888;">正在加载...</div>
+                    </div>
+                    <div class="comment-bar" style="position: static; width: 100%; padding: 20px 0 0 0; background: var(--ios-bg); border-top: none; margin-top: 20px;">
+                        <div style="display: flex; gap: 10px;">
+                            <textarea id="commentInput" placeholder="发表评论..." style="flex: 1; padding: 12px; border-radius: 12px; border: 1px solid #ddd; font-size: 16px; resize: none; height: 40px; max-height: 100px;"></textarea>
+                            <button id="commentSendBtn" class="btn-send" style="margin: 0; height: 40px; min-width: 60px;">发送</button>
+                        </div>
+                    </div>
+                </div>
+                <div id="comments-section" class="detail-sidebar">
+                    <div style="text-align: center; padding: 20px; color: #888;">正在加载评论...</div>
                 </div>
             </div>
         </div>
@@ -378,10 +712,10 @@
                     </div>
                     <div class="content">${safeHtml(post.content)}</div>
                     <div style="display: flex; gap: 10px; margin-top: 10px;">
-                        <button class="like-btn ${likedClass}" onclick="toggleLike('${post.id}', this)">
+                        <button class="like-btn ${likedClass}" onclick="toggleLike(\'${post.id}\', this)">
                             <span class="heart-icon">❤</span> <span class="like-count">${post.likeCount}</span>
                         </button>
-                        <button class="comment-btn" onclick="showPostDetail('${post.id}')" style="display: inline-flex; align-items: center; gap: 4px; background: none; border: none; color: var(--ios-secondary); font-size: 14px; cursor: pointer; padding: 5px 10px; border-radius: 12px; transition: all 0.3s ease; margin-top: 0;">
+                        <button class="action-btn" onclick="showPostDetail(\'${post.id}\')">
                             <span>💬</span> <span class="comment-count">评论</span>
                         </button>
                     </div>
@@ -410,10 +744,43 @@
             padding: 5px 10px;
             border-radius: 12px;
             transition: all 0.3s ease;
+            margin-top: 0;
         }
 
         .comment-btn:hover {
             background-color: #f0f0f0;
+        }
+        
+        /* 统一按钮样式 */
+        .action-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            background: none;
+            border: none;
+            color: var(--ios-secondary);
+            font-size: 14px;
+            cursor: pointer;
+            padding: 5px 10px;
+            border-radius: 12px;
+            transition: all 0.3s ease;
+            margin-top: 0;
+        }
+
+        .action-btn:hover {
+            background-color: #f0f0f0;
+        }
+
+        .action-btn.liked {
+            color: #ff3b30;
+        }
+
+        .action-btn .heart-icon {
+            transition: all 0.3s ease;
+        }
+
+        .action-btn.liked .heart-icon {
+            color: #ff3b30;
         }
     `;
     document.head.appendChild(style);
@@ -749,8 +1116,103 @@
         }, 300);
     }
 
+    // 侧边栏功能
+    async function loadSidebarData() {
+        await loadTrendingPosts();
+        await loadCommunityStats();
+    }
+
+    // 加载热门帖子
+    async function loadTrendingPosts() {
+        try {
+            // 获取过去24小时内点赞数最多的帖子
+            const twentyFourHoursAgo = new Date();
+            twentyFourHoursAgo.setHours(twentyFourHoursAgo.getHours() - 24);
+            
+            const { data: posts, error } = await client
+                .from('posts')
+                .select('*, profiles(username), likes(count)')
+                .gte('created_at', twentyFourHoursAgo.toISOString())
+                .order('likes.count', { ascending: false, nullsFirst: false })
+                .limit(5);
+
+            if (error) {
+                console.error('获取热门帖子失败:', error);
+                document.getElementById('trending-posts').innerHTML = '<div style="text-align: center; padding: 10px; color: #888;">加载失败</div>';
+                return;
+            }
+
+            if (!posts || posts.length === 0) {
+                document.getElementById('trending-posts').innerHTML = '<div style="text-align: center; padding: 10px; color: #888;">暂无热门帖子</div>';
+                return;
+            }
+
+            const trendingHtml = posts.map(post => {
+                const username = post.profiles?.username || '匿名';
+                const likeCount = post.likes?.[0]?.count || 0;
+                const truncatedContent = post.content.length > 50 ? 
+                    post.content.substring(0, 50) + '...' : post.content;
+                
+                return `
+                    <div class="trending-post" onclick="showPostDetail('${post.id}')" style="cursor: pointer;">
+                        <div style="font-weight: 500; margin-bottom: 4px;">${safeHtml(username)}</div>
+                        <div style="font-size: 13px; color: #666; margin-bottom: 4px;">${safeHtml(truncatedContent)}</div>
+                        <div style="display: flex; align-items: center; gap: 8px; font-size: 12px; color: #8E8E93;">
+                            <span>❤ ${likeCount}</span>
+                            <span>${new Date(post.created_at).toLocaleTimeString('zh-CN', {hour: '2-digit', minute: '2-digit'})}</span>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            document.getElementById('trending-posts').innerHTML = trendingHtml;
+        } catch (err) {
+            console.error('加载热门帖子时出错:', err);
+            document.getElementById('trending-posts').innerHTML = '<div style="text-align: center; padding: 10px; color: #888;">加载失败</div>';
+        }
+    }
+
+    // 加载社区统计数据
+    async function loadCommunityStats() {
+        try {
+            // 获取总帖子数
+            const { count: totalPosts, error: postsError } = await client
+                .from('posts')
+                .select('*', { count: 'exact', head: true })
+                .is('parent_id', null); // 只统计主帖子，不包含评论
+
+            // 获取总用户数
+            const { count: totalUsers, error: usersError } = await client
+                .from('profiles')
+                .select('*', { count: 'exact', head: true });
+
+            // 获取今日活跃用户数（过去24小时内发帖或点赞的用户）
+            const twentyFourHoursAgo = new Date();
+            twentyFourHoursAgo.setHours(twentyFourHoursAgo.getHours() - 24);
+            
+            const { count: todayActive, error: activeError } = await client
+                .from('posts')
+                .select('user_id', { count: 'exact', head: true })
+                .gte('created_at', twentyFourHoursAgo.toISOString())
+                .not('user_id', 'is', null);
+
+            if (postsError || usersError || activeError) {
+                console.error('获取统计数据失败:', postsError || usersError || activeError);
+                return;
+            }
+
+            // 更新UI
+            document.getElementById('total-posts').textContent = totalPosts || 0;
+            document.getElementById('total-users').textContent = totalUsers || 0;
+            document.getElementById('today-active').textContent = todayActive || 0;
+        } catch (err) {
+            console.error('加载社区统计数据时出错:', err);
+        }
+    }
+
     // 启动项目
     init();
+    loadSidebarData();
 </script>
 </body>
 </html>
