@@ -112,63 +112,11 @@
             text-align: center;
         }
 
-        /* 设置弹窗样式 */
-        .settings-modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0,0,0,0.5);
-            z-index: 1000;
-            justify-content: center;
-            align-items: center;
-        }
-
-        .settings-content {
-            background: white;
-            padding: 30px;
-            border-radius: 15px;
-            width: 300px;
-            text-align: center;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
-        }
-
-        .settings-content input {
-            width: 100%;
-            padding: 12px;
-            margin: 10px 0;
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            font-size: 16px;
-            box-sizing: border-box;
-        }
-
-        .settings-content button {
-            width: 100%;
-            padding: 12px;
-            margin: 10px 0;
-            border: none;
-            border-radius: 8px;
-            font-size: 16px;
-            cursor: pointer;
-        }
-
-        .save-btn {
-            background: var(--ios-blue);
-            color: white;
-        }
-
-        .cancel-btn {
-            background: #f0f0f0;
-            color: #333;
-        }
     </style>
 </head>
 <body>
 
-<nav class="nav-bar">
+    <nav class="nav-bar">
     <strong style="font-size: 20px; letter-spacing: -0.5px;">Exploro</strong>
     <div id="userLabel" class="time"></div>
 </nav>
@@ -204,16 +152,6 @@
     </div>
 </div>
 
-<!-- 设置弹窗 -->
-<div id="settingsModal" class="settings-modal">
-    <div class="settings-content">
-        <h3 style="margin-top: 0; color: #333;">设置</h3>
-        <input type="text" id="usernameInput" placeholder="用户名" />
-        <input type="text" id="websiteInput" placeholder="个人网站" />
-        <button class="save-btn" onclick="saveProfile()">保存</button>
-        <button class="cancel-btn" onclick="closeSettingsModal()">取消</button>
-    </div>
-</div>
 
 <script>
     // --- 自动化配置 ---
@@ -249,7 +187,7 @@
                     .single();
                 
                 const displayName = profile?.username || shortName;
-                userLabel.innerHTML = `Hi, ${displayName} · <a class="auth-btn" onclick="openSettings()">设置</a> · <a class="auth-btn" onclick="logout()">退出</a>`;
+                userLabel.innerHTML = `Hi, ${displayName} · <a class="auth-btn" href="profile.html">设置</a> · <a class="auth-btn" onclick="logout()">退出</a>`;
             } else {
                 userLabel.innerHTML = `<a class="auth-btn" onclick="login()">登录/注册</a>`;
             }
@@ -399,75 +337,6 @@
         window.location.reload();
     }
 
-    // 设置功能
-    async function openSettings() {
-        if (!currentUserId) {
-            alert('请先登录');
-            return;
-        }
-
-        // 获取当前用户资料
-        const { data: profile, error } = await client
-            .from('profiles')
-            .select('username, website')
-            .eq('id', currentUserId)
-            .single();
-
-        if (error) {
-            console.error('获取用户资料失败:', error);
-            // 如果用户资料不存在，创建一个新的
-            const { error: insertError } = await client
-                .from('profiles')
-                .upsert({
-                    id: currentUserId,
-                    username: currentUserId.substring(0, 10),  // 使用用户ID的前10位作为默认用户名
-                });
-
-            if (insertError) {
-                console.error('创建用户资料失败:', insertError);
-            }
-        } else {
-            // 填入当前用户信息
-            document.getElementById('usernameInput').value = profile?.username || '';
-            document.getElementById('websiteInput').value = profile?.website || '';
-        }
-
-        // 显示设置弹窗
-        document.getElementById('settingsModal').style.display = 'flex';
-    }
-
-    async function saveProfile() {
-        const username = document.getElementById('usernameInput').value.trim();
-        const website = document.getElementById('websiteInput').value.trim();
-
-        if (!username) {
-            alert('用户名不能为空');
-            return;
-        }
-
-        // 更新用户资料
-        const { error } = await client
-            .from('profiles')
-            .upsert({
-                id: currentUserId,
-                username: username,
-                website: website
-            });
-
-        if (error) {
-            console.error('更新用户资料失败:', error);
-            alert('保存失败: ' + error.message);
-        } else {
-            alert('保存成功！');
-            closeSettingsModal();
-            // 重新加载用户信息
-            await init();
-        }
-    }
-
-    function closeSettingsModal() {
-        document.getElementById('settingsModal').style.display = 'none';
-    }
 
     function safeHtml(str) {
         const div = document.createElement('div');

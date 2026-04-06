@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>个人资料 - Exploro</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        :root {
+            --ios-bg: #F2F2F7;
+            --ios-card: #FFFFFF;
+            --ios-blue: #007AFF;
+            --ios-text: #000000;
+            --ios-secondary: #8E8E93;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-font-smoothing: antialiased; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif;
+            background-color: var(--ios-bg);
+            color: var(--ios-text);
+            line-height: 1.4;
+        }
+
+        /* iOS 风格模糊导航栏 */
+        .nav-bar {
+            position: sticky; top: 0; z-index: 100;
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+            border-bottom: 0.5px solid rgba(0,0,0,0.1);
+            padding: 12px 20px; display: flex; justify-content: space-between; align-items: center;
+        }
+
+        .container { max-width: 600px; margin: 0 auto; padding: 20px 16px; }
+
+        /* 表单卡片 */
+        .form-card {
+            background: var(--ios-card); border-radius: 18px; padding: 20px;
+            margin-bottom: 24px; box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: var(--ios-text);
+        }
+
+        .form-group input, .form-group textarea {
+            width: 100%;
+            padding: 12px 15px;
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            font-size: 16px;
+            background: #f8f8f8;
+            box-sizing: border-box;
+        }
+
+        .form-group textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+
+        .btn-save {
+            background: var(--ios-blue);
+            color: white;
+            border: none;
+            padding: 14px 20px;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 10px;
+        }
+
+        .btn-save:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .avatar-preview {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            background: #f0f0f0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px;
+            font-size: 40px;
+            overflow: hidden;
+        }
+
+        .avatar-preview img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .upload-btn {
+            display: block;
+            width: 100%;
+            padding: 10px;
+            text-align: center;
+            background: #f0f0f0;
+            border-radius: 10px;
+            margin-top: 10px;
+            cursor: pointer;
+        }
+
+        .auth-btn { color: var(--ios-blue); font-weight: 500; cursor: pointer; text-decoration: none; }
+    </style>
+</head>
+<body>
+    <nav class="nav-bar">
+        <a class="auth-btn" href="index.html">← 返回</a>
+        <strong style="font-size: 20px; letter-spacing: -0.5px;">个人资料</strong>
+        <div></div>
+    </nav>
+
+    <div class="container">
+        <div class="form-card">
+            <div class="avatar-preview" id="avatarPreview">
+                <div id="avatarInitials">U</div>
+            </div>
+            <div style="text-align: center; margin-bottom: 20px;">
+                <input type="file" id="avatarUpload" accept="image/*" style="display: none;" />
+                <div class="upload-btn" onclick="document.getElementById('avatarUpload').click()">上传头像</div>
+            </div>
+
+            <div class="form-group">
+                <label for="username">用户名</label>
+                <input type="text" id="username" placeholder="输入用户名" />
+            </div>
+
+            <div class="form-group">
+                <label for="full_name">姓名</label>
+                <input type="text" id="full_name" placeholder="输入您的姓名" />
+            </div>
+
+            <div class="form-group">
+                <label for="bio">个人简介</label>
+                <textarea id="bio" placeholder="介绍一下自己..."></textarea>
+            </div>
+
+            <div class="form-group">
+                <label for="website">个人网站</label>
+                <input type="text" id="website" placeholder="https://example.com" />
+            </div>
+
+            <div class="form-group">
+                <label for="location">位置</label>
+                <input type="text" id="location" placeholder="城市或国家" />
+            </div>
+
+            <button class="btn-save" onclick="saveProfile()">保存资料</button>
+        </div>
+    </div>
+
+    <script>
+        // --- 自动化配置 ---
+        const CONF = {
+            URL: 'https://ipcetzfcptxuzyhgszse.supabase.co',
+            KEY: 'sb_publishable_vSgW632vNRNafBN3gy8jaA_rT4XQu8E'
+        };
+
+        // 使用 client 命名避开全局变量冲突
+        const client = window.supabase.createClient(CONF.URL, CONF.KEY);
+
+        let currentUserId = null;
+
+        // 初始化页面
+        async function init() {
+            // 检查用户是否已登录
+            const { data: { user }, error } = await client.auth.getUser();
+            if (error || !user) {
+                alert('请先登录');
+                window.location.href = 'index.html';
+                return;
+            }
+
+            currentUserId = user.id;
+
+            // 获取用户资料
+            const { data: profile, error: profileError } = await client
+                .from('profiles')
+                .select('*')
+                .eq('id', currentUserId)
+                .single();
+
+            if (profileError) {
+                console.error('获取用户资料失败:', profileError);
+                // 如果用户资料不存在，创建一个新的
+                const { error: insertError } = await client
+                    .from('profiles')
+                    .upsert({
+                        id: currentUserId,
+                        username: user.email.split('@')[0],
+                    });
+
+                if (insertError) {
+                    console.error('创建用户资料失败:', insertError);
+                }
+            } else {
+                // 填入当前用户信息
+                document.getElementById('username').value = profile?.username || '';
+                document.getElementById('full_name').value = profile?.full_name || '';
+                document.getElementById('bio').value = profile?.bio || '';
+                document.getElementById('website').value = profile?.website || '';
+                document.getElementById('location').value = profile?.location || '';
+
+                // 更新头像显示
+                updateAvatarPreview(profile?.avatar_url, profile?.username || user.email.split('@')[0]);
+            }
+
+            // 设置头像上传事件
+            document.getElementById('avatarUpload').addEventListener('change', handleAvatarUpload);
+        }
+
+        // 更新头像预览
+        function updateAvatarPreview(avatarUrl, name) {
+            const avatarPreview = document.getElementById('avatarPreview');
+            const avatarInitials = document.getElementById('avatarInitials');
+            
+            if (avatarUrl) {
+                avatarPreview.innerHTML = `<img src="${avatarUrl}" alt="Avatar" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" />`;
+                avatarPreview.innerHTML += `<div id="avatarInitials" style="display: none; position: absolute;">${name.charAt(0).toUpperCase()}</div>`;
+            } else {
+                avatarInitials.textContent = name.charAt(0).toUpperCase();
+                avatarPreview.innerHTML = `<div id="avatarInitials">${name.charAt(0).toUpperCase()}</div>`;
+            }
+        }
+
+        // 处理头像上传
+        async function handleAvatarUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            // 这里需要实现头像上传到Supabase Storage的逻辑
+            // 由于当前配置没有提供Storage访问权限，我们暂时显示预览
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const avatarPreview = document.getElementById('avatarPreview');
+                const name = document.getElementById('username').value || 'User';
+                avatarPreview.innerHTML = `<img src="${e.target.result}" alt="Avatar" />`;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        // 保存用户资料
+        async function saveProfile() {
+            const username = document.getElementById('username').value.trim();
+            const full_name = document.getElementById('full_name').value.trim();
+            const bio = document.getElementById('bio').value.trim();
+            const website = document.getElementById('website').value.trim();
+            const location = document.getElementById('location').value.trim();
+
+            if (!username) {
+                alert('用户名不能为空');
+                return;
+            }
+
+            // 更新用户资料
+            const { error } = await client
+                .from('profiles')
+                .upsert({
+                    id: currentUserId,
+                    username: username,
+                    full_name: full_name,
+                    bio: bio,
+                    website: website,
+                    location: location
+                });
+
+            if (error) {
+                console.error('更新用户资料失败:', error);
+                alert('保存失败: ' + error.message);
+            } else {
+                alert('保存成功！');
+            }
+        }
+
+        // 启动页面
+        init();
+    </script>
+</body>
+</html>
