@@ -53,6 +53,7 @@
         .post-card {
             background: var(--ios-card); border-radius: 20px; padding: 20px;
             margin-bottom: 16px; box-shadow: 0 2px 10px rgba(0,0,0,0.02);
+            position: relative;
         }
         .user-info { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
         .avatar { 
@@ -63,6 +64,29 @@
         .username { font-weight: 600; font-size: 15px; }
         .time { font-size: 12px; color: var(--ios-secondary); }
         .content { font-size: 17px; margin-bottom: 10px; word-wrap: break-word; white-space: pre-wrap; }
+
+        .delete-btn {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            background: #f0f0f0;
+            border: none;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            opacity: 0;
+            transition: opacity 0.2s;
+            font-size: 16px;
+            color: #888;
+        }
+
+        .post-card:hover .delete-btn {
+            opacity: 1;
+        }
 
         .auth-btn { color: var(--ios-blue); font-weight: 500; cursor: pointer; text-decoration: none; }
         
@@ -190,8 +214,9 @@
 
         postFeed.innerHTML = data.map(post => {
             const name = post.profiles?.username || '匿名';
+            const isOwner = currentUserId && post.user_id === currentUserId;
             return `
-                <div class="post-card">
+                <div class="post-card" data-post-id="${post.id}">
                     <div class="user-info">
                         <div class="avatar">${name.charAt(0).toUpperCase()}</div>
                         <div>
@@ -200,9 +225,42 @@
                         </div>
                     </div>
                     <div class="content">${safeHtml(post.content)}</div>
+                    ${isOwner ? `<button class="delete-btn" onclick="deletePost(event, '${post.id}')">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2  0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                        </svg>
+                    </button>` : ''}
                 </div>
             `;
         }).join('');
+    }
+
+    // 删除帖子功能
+    async function deletePost(event, postId) {
+        event.stopPropagation(); // 防止点击事件冒泡到卡片上
+        const confirmed = confirm('确定要删除这条思考吗？');
+        if (!confirmed) return;
+
+        try {
+            const { error } = await client.from('posts').delete().eq('id', postId);
+            if (error) {
+                alert('删除失败: ' + error.message);
+            } else {
+                // 从前端移除卡片
+                const postCard = event.target.closest('.post-card');
+                if (postCard) {
+                    postCard.style.transition = 'opacity 0.3s, transform 0.3s';
+                    postCard.style.opacity = '0';
+                    postCard.style.transform = 'translateX(-100%)';
+                    setTimeout(() => {
+                        postCard.remove();
+                    }, 300);
+                }
+            }
+        } catch (err) {
+            console.error('删除帖子时出错:', err);
+            alert('删除失败: ' + err.message);
+        }
     }
 
     // 3. 发帖动作
