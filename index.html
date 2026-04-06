@@ -65,6 +65,28 @@
         .content { font-size: 17px; margin-bottom: 10px; word-wrap: break-word; white-space: pre-wrap; }
 
         .auth-btn { color: var(--ios-blue); font-weight: 500; cursor: pointer; text-decoration: none; }
+        
+        /* GitHub 登录按钮样式 */
+        .github-login-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            background: #333;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 6px;
+            font-weight: 500;
+            cursor: pointer;
+            margin-top: 10px;
+            text-decoration: none;
+        }
+        
+        .login-options {
+            margin-top: 10px;
+            text-align: center;
+        }
     </style>
 </head>
 <body>
@@ -82,6 +104,26 @@
 
     <div id="postFeed">
         <div style="text-align: center; padding: 50px; color: #888;">正在连接思绪...</div>
+    </div>
+</div>
+
+<!-- 登录模态框 -->
+<div id="loginModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; justify-content: center; align-items: center;">
+    <div style="background: white; padding: 30px; border-radius: 15px; width: 300px; text-align: center; box-shadow: 0 4px 20px rgba(0,0,0,0.2);">
+        <h3 style="margin-top: 0; color: #333;">登录 / 注册</h3>
+        <p>选择登录方式</p>
+        <button class="auth-btn" onclick="loginWithGitHub()" style="display: block; width: 100%; margin: 10px 0; padding: 12px; border-radius: 8px; background: #333; color: white; border: none; cursor: pointer; font-size: 16px;">
+            <span style="display: inline-flex; align-items: center; justify-content: center; gap: 8px;">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle;">
+                    <path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.52 3.3 6.71 6.44 7A3.37 3.37 0 0 0 9 18.13V22"></path>
+                </svg>
+                使用 GitHub 登录
+            </span>
+        </button>
+        <button class="auth-btn" onclick="loginWithSms()" style="display: block; width: 100%; margin: 10px 0; padding: 12px; border-radius: 8px; background: #007AFF; color: white; border: none; cursor: pointer; font-size: 16px;">
+            使用邮箱登录
+        </button>
+        <button onclick="closeLoginModal()" style="margin-top: 15px; padding: 8px 16px; border: none; background: none; color: #888; cursor: pointer; font-size: 14px;">取消</button>
     </div>
 </div>
 
@@ -187,6 +229,21 @@
 
     // 交互功能
     async function login() {
+        // 显示登录模态框
+        document.getElementById('loginModal').style.display = 'flex';
+    }
+
+    async function loginWithGitHub() {
+        const { error } = await client.auth.signInWithOAuth({
+            provider: 'github',
+            options: {
+                redirectTo: window.location.href
+            }
+        });
+        if (error) console.error("GitHub登录失败:", error.message);
+    }
+
+    async function loginWithSms() {
         const email = prompt("请输入邮箱获取验证链接：");
         if (!email) return;
         const { error } = await client.auth.signInWithOtp({ 
@@ -195,6 +252,10 @@
         });
         if (error) alert("发送失败: " + error.message);
         else alert("邮件已发送！请通过邮件链接登录。");
+    }
+
+    function closeLoginModal() {
+        document.getElementById('loginModal').style.display = 'none';
     }
 
     async function logout() {
