@@ -112,6 +112,38 @@
             text-align: center;
         }
 
+        /* 点赞按钮样式 */
+        .like-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            background: none;
+            border: none;
+            color: var(--ios-secondary);
+            font-size: 14px;
+            cursor: pointer;
+            padding: 5px 10px;
+            border-radius: 12px;
+            transition: all 0.3s ease;
+            margin-top: 10px;
+        }
+
+        .like-btn:hover {
+            background-color: #f0f0f0;
+        }
+
+        .like-btn.liked {
+            color: #ff3b30;
+        }
+
+        .like-btn .heart-icon {
+            transition: all 0.3s ease;
+        }
+
+        .like-btn.liked .heart-icon {
+            color: #ff3b30;
+        }
+
     </style>
 </head>
 <body>
@@ -199,10 +231,10 @@
 
     // 2. 获取帖子数据
     async function fetchPosts() {
-        // 使用关联查询获取帖子和用户资料
-        let { data, error } = await client
+        // 使用关联查询获取帖子、用户资料和点赞信息
+        let { data: posts, error } = await client
             .from('posts')
-            .select('*, profiles(*)')
+            .select('*, profiles(*), likes(user_id)')
             .order('created_at', { ascending: false });
 
         if (error) {
@@ -210,16 +242,34 @@
             return;
         }
 
-        if (!data || data.length === 0) {
+        if (!posts || posts.length === 0) {
             postFeed.innerHTML = `<div style="text-align:center;padding:80px;color:#8E8E93;">这里空空如也，留下你的第一条思考吧。</div>`;
             return;
         }
 
-        postFeed.innerHTML = data.map(post => {
+        // 获取点赞总数
+        const postsWithLikeCounts = await Promise.all(posts.map(async (post) => {
+            const { count, error: countError } = await client
+                .from('likes')
+                .select('*', { count: 'exact', head: true })
+                .eq('post_id', post.id);
+            
+            if (countError) {
+                console.error('获取点赞数失败:', countError);
+                return { ...post, likeCount: 0, userLiked: false };
+            }
+
+            // 检查当前用户是否点赞
+            const userLiked = currentUserId ? post.likes.some(like => like.user_id === currentUserId) : false;
+            return { ...post, likeCount: count || 0, userLiked };
+        }));
+
+        postFeed.innerHTML = postsWithLikeCounts.map(post => {
             const profile = post.profiles;
             const name = profile?.username || '匿名';
             const avatarUrl = profile?.avatar_url || '';
             const isOwner = currentUserId && post.user_id === currentUserId;
+            const likedClass = post.userLiked ? 'liked' : '';
             
             let avatarHtml = '';
             if (avatarUrl) {
@@ -241,6 +291,9 @@
                         </div>
                     </div>
                     <div class="content">${safeHtml(post.content)}</div>
+                    <button class="like-btn ${likedClass}" onclick="toggleLike('${post.id}', this)">
+                        <span class="heart-icon">❤</span> <span class="like-count">${post.likeCount}</span>
+                    </button>
                     ${isOwner ? `<button class="delete-btn" onclick="deletePost(event, '${post.id}')">
                         <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2  0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
@@ -342,6 +395,68 @@
         const div = document.createElement('div');
         div.textContent = str;
         return div.innerHTML;
+    }
+
+    // 点赞功能
+    async function toggleLike(postId, buttonElement) {
+        if (!currentUserId) {
+            alert('请先登录');
+            return;
+        }
+
+        // 获取点赞按钮和计数元素
+        const likeCountElement = buttonElement.querySelector('.like-count');
+        const likeCount = parseInt(likeCountElement.textContent) || 0;
+        const isLiked = buttonElement.classList.contains('liked');
+
+        try {
+            if (isLiked) {
+                // 如果已点赞，则取消点赞
+                const { error } = await client
+                    .from('likes')
+                    .delete()
+                    .eq('post_id', postId)
+                    .eq('user_id', currentUserId);
+                    
+                if (error) {
+                    console.error('取消点赞失败:', error);
+                    alert('操作失败，请重试');
+                    return;
+                }
+
+                // 更新UI
+                buttonElement.classList.remove('liked');
+                likeCountElement.textContent = likeCount - 1;
+            } else {
+                // 如果未点赞，则添加点赞
+                const { error } = await client
+                    .from('likes')
+                    .insert({
+                        post_id: postId,
+                        user_id: currentUserId
+                    });
+                    
+                if (error) {
+                    console.error('点赞失败:', error);
+                    if (error.message.includes('duplicate key value')) {
+                        // 如果是重复点赞，可能是因为数据同步问题，尝试获取最新数据
+                        console.log('已点赞，刷新数据');
+                        await fetchPosts();
+                        return;
+                    } else {
+                        alert('操作失败，请重试');
+                        return;
+                    }
+                }
+
+                // 更新UI
+                buttonElement.classList.add('liked');
+                likeCountElement.textContent = likeCount + 1;
+            }
+        } catch (err) {
+            console.error('点赞操作出错:', err);
+            alert('操作失败，请重试');
+        }
     }
 
     // 启动项目
