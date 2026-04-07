@@ -47,16 +47,26 @@
         .main-content {
             flex: 4; /* 给主内容更多空间 */
             min-width: 0; /* 防止flex项溢出 */
-            max-width: 1200px; /* 进一步增加主内容区域宽度 */
+            max-width: 1000px; /* 限制主内容区域宽度 */
         }
 
         .sidebar {
             flex: 1; /* 侧边栏使用flex:1，但限制最大宽度 */
-            flex: 0 0 320px;
+            flex: 0 0 320px; /* 保持固定宽度 */
             position: sticky;
             top: 20px;
             align-self: flex-start;
             height: fit-content;
+            /* 优化侧边栏样式，使其更美观 */
+            background: var(--ios-card);
+            border-radius: 20px;
+            padding: 20px;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.05);
+            align-self: flex-start;
+            max-height: calc(100vh - 40px);
+            overflow-y: auto;
+            /* 当侧边栏为空时，保持一定的视觉效果 */
+            min-height: 100px;
         }
 
         /* 调整卡片样式以适应桌面布局 */
@@ -65,15 +75,18 @@
             box-shadow: 0 4px 16px rgba(0,0,0,0.08);
             transition: box-shadow 0.3s ease;
             padding: 28px; /* 增加内边距 */
+            border: 1px solid #eee;
+            border-radius: 16px;
         }
         
         .post-card:hover {
             box-shadow: 0 6px 20px rgba(0,0,0,0.12);
+            transform: translateY(-2px);
         }
         
         /* 增加内容字体大小 */
         .content {
-            font-size: 20px !important; /* 重要：确保字体更大 */
+            font-size: 19px !important; /* 重要：确保字体更大 */
             line-height: 1.7;
         }
         
@@ -97,6 +110,8 @@
         .input-card {
             margin-bottom: 24px;
             box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+            border-radius: 18px;
+            border: 1px solid #eee;
         }
         
         .input-card textarea {
@@ -169,13 +184,7 @@
             width: 100%;
             max-width: 800px;
         }
-        
-        /* 优化侧边栏卡片 */
-        .sidebar-card {
-            box-shadow: 0 4px 16px rgba(0,0,0,0.08);
-            margin-bottom: 20px;
-        }
-        
+
         /* 桌面端用户名显示优化 */
         #userLabel {
             font-size: 15px;
@@ -193,20 +202,10 @@
             height: 42px;
             font-size: 16px;
         }
-        
-        /* 优化帖子内容 */
-        .content {
-            font-size: 18px;
-        }
-        
+
         /* 增强的桌面布局 - 更好的响应性 */
         .post-card {
             transition: all 0.3s ease;
-        }
-        
-        .post-card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
         }
         
         /* 优化文本区域 */
@@ -219,11 +218,6 @@
         .btn-send:hover {
             transform: scale(1.02);
             transition: all 0.2s ease;
-        }
-        
-        /* 优化导航栏 */
-        .nav-bar:hover {
-            background: rgba(255, 255, 255, 0.8);
         }
     }
     
@@ -482,23 +476,6 @@
             background-color: #e0e0e055;
         }
 
-        /* 侧边栏样式 */
-        .sidebar-card {
-            background: var(--ios-card);
-            border-radius: 18px;
-            padding: 20px;
-            margin-bottom: 16px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.02);
-        }
-
-        .trending-post {
-            padding: 10px 0;
-            border-bottom: 1px solid #f0f0f0;
-        }
-
-        .trending-post:last-child {
-            border-bottom: none;
-        }
 
     </style>
 </head>
@@ -525,30 +502,6 @@
         </div>
 
         <div class="sidebar" id="sidebar">
-            <div class="sidebar-card">
-                <h3 style="margin-bottom: 15px; font-size: 18px;">热门讨论</h3>
-                <div id="trending-posts">
-                    <div style="text-align: center; padding: 20px; color: #888;">正在加载...</div>
-                </div>
-            </div>
-
-            <div class="sidebar-card">
-                <h3 style="margin-bottom: 15px; font-size: 18px;">社区数据</h3>
-                <div id="community-stats">
-                    <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #f0f0f0;">
-                        <span>总帖子数</span>
-                        <span id="total-posts">0</span>
-                    </div>
-                    <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #f0f0f0;">
-                        <span>总用户数</span>
-                        <span id="total-users">0</span>
-                    </div>
-                    <div style="display: flex; justify-content: space-between; padding: 8px 0;">
-                        <span>今日活跃</span>
-                        <span id="today-active">0</span>
-                    </div>
-                </div>
-            </div>
         </div>
     </div>
 
@@ -1116,103 +1069,8 @@
         }, 300);
     }
 
-    // 侧边栏功能
-    async function loadSidebarData() {
-        await loadTrendingPosts();
-        await loadCommunityStats();
-    }
-
-    // 加载热门帖子
-    async function loadTrendingPosts() {
-        try {
-            // 获取过去24小时内点赞数最多的帖子
-            const twentyFourHoursAgo = new Date();
-            twentyFourHoursAgo.setHours(twentyFourHoursAgo.getHours() - 24);
-            
-            const { data: posts, error } = await client
-                .from('posts')
-                .select('*, profiles(username), likes(count)')
-                .gte('created_at', twentyFourHoursAgo.toISOString())
-                .order('likes.count', { ascending: false, nullsFirst: false })
-                .limit(5);
-
-            if (error) {
-                console.error('获取热门帖子失败:', error);
-                document.getElementById('trending-posts').innerHTML = '<div style="text-align: center; padding: 10px; color: #888;">加载失败</div>';
-                return;
-            }
-
-            if (!posts || posts.length === 0) {
-                document.getElementById('trending-posts').innerHTML = '<div style="text-align: center; padding: 10px; color: #888;">暂无热门帖子</div>';
-                return;
-            }
-
-            const trendingHtml = posts.map(post => {
-                const username = post.profiles?.username || '匿名';
-                const likeCount = post.likes?.[0]?.count || 0;
-                const truncatedContent = post.content.length > 50 ? 
-                    post.content.substring(0, 50) + '...' : post.content;
-                
-                return `
-                    <div class="trending-post" onclick="showPostDetail('${post.id}')" style="cursor: pointer;">
-                        <div style="font-weight: 500; margin-bottom: 4px;">${safeHtml(username)}</div>
-                        <div style="font-size: 13px; color: #666; margin-bottom: 4px;">${safeHtml(truncatedContent)}</div>
-                        <div style="display: flex; align-items: center; gap: 8px; font-size: 12px; color: #8E8E93;">
-                            <span>❤ ${likeCount}</span>
-                            <span>${new Date(post.created_at).toLocaleTimeString('zh-CN', {hour: '2-digit', minute: '2-digit'})}</span>
-                        </div>
-                    </div>
-                `;
-            }).join('');
-
-            document.getElementById('trending-posts').innerHTML = trendingHtml;
-        } catch (err) {
-            console.error('加载热门帖子时出错:', err);
-            document.getElementById('trending-posts').innerHTML = '<div style="text-align: center; padding: 10px; color: #888;">加载失败</div>';
-        }
-    }
-
-    // 加载社区统计数据
-    async function loadCommunityStats() {
-        try {
-            // 获取总帖子数
-            const { count: totalPosts, error: postsError } = await client
-                .from('posts')
-                .select('*', { count: 'exact', head: true })
-                .is('parent_id', null); // 只统计主帖子，不包含评论
-
-            // 获取总用户数
-            const { count: totalUsers, error: usersError } = await client
-                .from('profiles')
-                .select('*', { count: 'exact', head: true });
-
-            // 获取今日活跃用户数（过去24小时内发帖或点赞的用户）
-            const twentyFourHoursAgo = new Date();
-            twentyFourHoursAgo.setHours(twentyFourHoursAgo.getHours() - 24);
-            
-            const { count: todayActive, error: activeError } = await client
-                .from('posts')
-                .select('user_id', { count: 'exact', head: true })
-                .gte('created_at', twentyFourHoursAgo.toISOString())
-                .not('user_id', 'is', null);
-
-            if (postsError || usersError || activeError) {
-                console.error('获取统计数据失败:', postsError || usersError || activeError);
-                return;
-            }
-
-            // 更新UI
-            document.getElementById('total-posts').textContent = totalPosts || 0;
-            document.getElementById('total-users').textContent = totalUsers || 0;
-            document.getElementById('today-active').textContent = todayActive || 0;
-        } catch (err) {
-            console.error('加载社区统计数据时出错:', err);
-        }
-    }
-
     // 启动项目
     init();
-    loadSidebarData();
 </script>
 </body>
 </html>
