@@ -38,35 +38,16 @@
 
         /* 侧边栏布局 */
         .desktop-layout {
-            display: flex;
-            gap: 32px; /* 增加间隙 */
-            max-width: 1400px;
+            display: block; /* 改为单列布局，移除flex布局 */
+            max-width: 1000px; /* 限制最大宽度 */
             margin: 0 auto;
+            padding: 0 20px;
         }
 
         .main-content {
-            flex: 4; /* 给主内容更多空间 */
+            flex: 1; /* 主内容占满 */
             min-width: 0; /* 防止flex项溢出 */
-            max-width: 1000px; /* 限制主内容区域宽度 */
-        }
-
-        .sidebar {
-            flex: 1; /* 侧边栏使用flex:1，但限制最大宽度 */
-            flex: 0 0 320px; /* 保持固定宽度 */
-            position: sticky;
-            top: 20px;
-            align-self: flex-start;
-            height: fit-content;
-            /* 优化侧边栏样式，使其更美观 */
-            background: var(--ios-card);
-            border-radius: 20px;
-            padding: 20px;
-            box-shadow: 0 4px 16px rgba(0,0,0,0.05);
-            align-self: flex-start;
-            max-height: calc(100vh - 40px);
-            overflow-y: auto;
-            /* 当侧边栏为空时，保持一定的视觉效果 */
-            min-height: 100px;
+            max-width: 100%; /* 限制主内容区域宽度 */
         }
 
         /* 调整卡片样式以适应桌面布局 */
@@ -118,22 +99,21 @@
             font-size: 16px;
         }
 
-        /* 桌面端详情页布局 */
+        /* 桌面端详情页布局 - 改为单列布局 */
         .detail-content {
-            display: flex;
-            gap: 24px;
-            max-width: 1400px;
+            display: block; /* 改为单列布局 */
+            max-width: 800px; /* 限制最大宽度 */
             margin: 0 auto;
             width: 100%;
         }
 
         .detail-main {
             flex: 1;
-            max-width: 800px;
+            max-width: 100%; /* 详情页主内容也占满 */
         }
 
         .detail-sidebar {
-            flex: 0 0 320px;
+            /* 保留这一样式类但不再使用 */
         }
         
         /* 优化详情页布局 */
@@ -143,12 +123,11 @@
         }
         
         #comments-section {
-            flex: 0 0 320px;
-            max-width: 320px;
+            max-width: 100%; /* 评论区也占满宽度 */
+            width: 100%;
             align-self: flex-start;
-            position: sticky;
-            top: 20px;
             height: fit-content;
+            margin-top: 20px; /* 将评论区移到下方 */
         }
         
         .detail-container {
@@ -225,69 +204,63 @@
     @media (min-width: 1200px) {
         .container, .detail-container {
             padding: 24px 50px;
-            max-width: 1600px;
+            max-width: 1000px; /* 限制最大宽度为单列布局 */
         }
         
         .desktop-layout {
-            max-width: 1600px;
-        }
-        
-        .sidebar {
-            flex: 0 0 360px;
+            max-width: 1000px; /* 限制最大宽度为单列布局 */
+            padding: 0 20px;
         }
         
         .detail-sidebar {
-            flex: 0 0 360px;
+            flex: 0 0 320px;
         }
         
         #comments-section {
-            flex: 0 0 360px;
-            max-width: 360px;
+            flex: 0 0 320px;
+            max-width: 320px;
         }
         
         /* 进一步优化大屏幕体验 - 更宽的主内容区域 */
         .main-content {
-            max-width: 1000px;
-            flex: 1 1 1000px;
+            max-width: 100%; /* 主内容占满 */
+            flex: 1; /* 主内容占满 */
         }
         
         .detail-main {
-            max-width: 1000px;
+            max-width: 100%; /* 详情页主内容也占满 */
         }
     }
     
     /* 超大屏幕优化 */
     @media (min-width: 1400px) {
         .desktop-layout {
-            max-width: 1800px;
-        }
-        
-        .sidebar {
-            flex: 0 0 400px;
+            max-width: 1000px; /* 限制最大宽度为单列布局 */
+            padding: 0 20px;
         }
         
         .detail-sidebar {
-            flex: 0 0 400px;
+            flex: 0 0 320px;
         }
         
         #comments-section {
-            flex: 0 0 400px;
-            max-width: 400px;
+            flex: 0 0 320px;
+            max-width: 320px;
         }
         
         .container, .detail-container {
-            max-width: 1800px;
+            max-width: 1000px; /* 限制最大宽度为单列布局 */
             padding: 28px 60px;
         }
         
         /* 超大屏幕下更宽的主内容区域 */
         .main-content {
-            max-width: 1200px;
-            flex: 1 1 1200px;
+            max-width: 100%; /* 主内容占满 */
+            flex: 1; /* 主内容占满 */
         }
         
         .detail-main {
-            max-width: 1200px;
+            max-width: 100%; /* 详情页主内容也占满 */
         }
     }
 
@@ -486,9 +459,9 @@
     <div id="userLabel" class="time"></div>
 </nav>
 
-<div class="container">
+    <div class="container">
     <div class="desktop-layout">
-        <div class="main-content">
+        <div class="main-content" style="flex: 1; max-width: 100%;">
             <div id="publishArea" class="input-card" style="display: none;">
                 <textarea id="postInput" placeholder="分享你的深度思考..." rows="3"></textarea>
                 <div style="height: 35px;"><button id="sendBtn" class="btn-send">发布</button></div>
@@ -499,9 +472,6 @@
                     <div style="text-align: center; padding: 50px; color: #888;">正在连接思绪...</div>
                 </div>
             </div>
-        </div>
-
-        <div class="sidebar" id="sidebar">
         </div>
     </div>
 
