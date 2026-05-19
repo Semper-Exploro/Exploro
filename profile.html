@@ -223,6 +223,8 @@
         // 初始化页面
         async function init() {
             // 检查用户是否已登录
+            // 关键修复：先调用 getSession() 确保 SDK 解析了 URL hash 中的 token
+            await client.auth.getSession();
             const { data: { user }, error } = await client.auth.getUser();
             if (error || !user) {
                 alert('请先登录');

@@ -23,7 +23,7 @@
 
         /* 响应式容器 */
         .container, .detail-container {
-            max-width: 1200px;
+            max-width: 1400px; /* 增加最大宽度 */
             margin: 0 auto;
             padding: 20px 16px;
         }
@@ -32,14 +32,14 @@
     @media (min-width: 768px) {
         .container, .detail-container {
             padding: 20px 40px;
-            max-width: 1400px;
+            max-width: 1600px; /* 显著增加最大宽度 */
             margin: 0 auto;
         }
 
         /* 侧边栏布局 */
         .desktop-layout {
             display: block; /* 改为单列布局，移除flex布局 */
-            max-width: 1400px; /* 增加最大宽度，更充分利用屏幕 */
+            max-width: 1600px; /* 显著增加最大宽度，更充分利用屏幕 */
             margin: 0 auto;
             padding: 0 20px;
         }
@@ -58,6 +58,7 @@
             padding: 28px; /* 增加内边距 */
             border: 1px solid #eee;
             border-radius: 16px;
+            max-width: 100%; /* 确保帖子卡片充分利用宽度 */
         }
         
         .post-card:hover {
@@ -93,6 +94,7 @@
             box-shadow: 0 4px 16px rgba(0,0,0,0.08);
             border-radius: 18px;
             border: 1px solid #eee;
+            max-width: 100%; /* 确保发布卡片充分利用宽度 */
         }
         
         .input-card textarea {
@@ -102,7 +104,7 @@
         /* 桌面端详情页布局 - 改为单列布局 */
         .detail-content {
             display: block; /* 改为单列布局 */
-            max-width: 1400px; /* 增加最大宽度，更充分利用屏幕 */
+            max-width: 1600px; /* 显著增加最大宽度，更充分利用屏幕 */
             margin: 0 auto;
             width: 100%;
         }
@@ -140,7 +142,7 @@
         
         /* 评论栏在桌面端保持在帖子下方 */
         .comment-bar {
-            max-width: 800px;
+            max-width: 100%; /* 现在允许评论栏占满宽度 */
             margin: 0 auto;
             padding: 20px 0 0 0;
             position: static;
@@ -161,7 +163,7 @@
         /* 详情页帖子卡片样式优化 */
         .detail-container .post-card {
             width: 100%;
-            max-width: 1400px; /* 增加最大宽度，更充分利用屏幕 */
+            max-width: 1600px; /* 显著增加最大宽度，更充分利用屏幕 */
         }
 
         /* 桌面端用户名显示优化 */
@@ -204,11 +206,11 @@
     @media (min-width: 1200px) {
         .container, .detail-container {
             padding: 24px 50px;
-            max-width: 1200px; /* 增加最大宽度 */
+            max-width: 1400px; /* 增加最大宽度 */
         }
         
         .desktop-layout {
-            max-width: 1200px; /* 增加最大宽度 */
+            max-width: 1400px; /* 增加最大宽度 */
             padding: 0 20px;
         }
         
@@ -235,7 +237,7 @@
     /* 超大屏幕优化 */
     @media (min-width: 1400px) {
         .desktop-layout {
-            max-width: 1200px; /* 增加最大宽度 */
+            max-width: 1400px; /* 增加最大宽度 */
             padding: 0 20px;
         }
         
@@ -249,7 +251,7 @@
         }
         
         .container, .detail-container {
-            max-width: 1200px; /* 增加最大宽度 */
+            max-width: 1400px; /* 增加最大宽度 */
             padding: 28px 60px;
         }
         
@@ -548,7 +550,14 @@
     // 1. 初始化鉴权状态
     async function init() {
         try {
+            // 关键修复：先调用 getSession() 确保 SDK 解析了 URL hash 中的 token
+            // Magic Link 重定向后 URL 带有 #access_token=xxx&refresh_token=yyy
+            // 必须先 getSession() 让 SDK 提取 token 并建立 session
+            const { data: { session } } = await client.auth.getSession();
+            
+            // 然后获取用户信息
             const { data: { user } } = await client.auth.getUser();
+            
             if (user) {
                 currentUserId = user.id;
                 publishArea.style.display = 'block';
@@ -777,9 +786,11 @@
     async function loginWithSms() {
         const email = prompt("请输入邮箱获取验证链接：");
         if (!email) return;
+        // 使用 origin + pathname 避免现有 hash 参数与 Supabase 回调的 token 冲突
+        const redirectTo = window.location.origin + window.location.pathname;
         const { error } = await client.auth.signInWithOtp({ 
             email,
-            options: { emailRedirectTo: window.location.href }
+            options: { emailRedirectTo: redirectTo }
         });
         if (error) alert("发送失败: " + error.message);
         else alert("邮件已发送！请通过邮件链接登录。");
